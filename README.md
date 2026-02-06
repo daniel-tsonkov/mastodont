@@ -40,6 +40,7 @@ https://www.markdownguide.org/basic-syntax/
 
 Екипа се състои от
 
+<pre>
 CEO
  ├── Operations / PM<br>
  │     ├── Product Owner<br>
@@ -58,6 +59,7 @@ CEO
  ├── Admin Assistant<br>
  ├── Sales / Account Manager<br>
  └── Digital Marketing Specialist<br>
+</pre>
 
 ОПИСАНИЕ НА ВСЯКА ДЛЪЖНОСТ
 ##### Управление
