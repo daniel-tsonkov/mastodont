@@ -37,23 +37,23 @@ https://docs.docker.com/compose/
 Екипа се състои от
 
 CEO
- ├── Operations / PM.
- │     ├── Product Owner.
- │     ├── Backend Team Lead.
- │     │        ├── Backend Developer (Mid).
- │     │        └── Backend Developer (Junior).
- │     ├── Frontend Team Lead.
- │     │        ├── Frontend Developer (Mid).
- │     │        └── Full-stack Developer.
- │     ├── DevOps Engineer.
- │     ├── QA Team.
- │     │        └── QA Engineer.
- │     └── Technical Support (L1/L2).
- │.
- ├── HR Specialist.
- ├── Admin Assistant.
- ├── Sales / Account Manager.
- └── Digital Marketing Specialist.
+ ├── Operations / PM<br>
+ │     ├── Product Owner<br>
+ │     ├── Backend Team Lead<br>
+ │     │        ├── Backend Developer (Mid)<br>
+ │     │        └── Backend Developer (Junior)<br>
+ │     ├── Frontend Team Lead<br>
+ │     │        ├── Frontend Developer (Mid)<br>
+ │     │        └── Full-stack Developer<br>
+ │     ├── DevOps Engineer<br>
+ │     ├── QA Team<br>
+ │     │        └── QA Engineer<br>
+ │     └── Technical Support (L1/L2)<br>
+ │<br>
+ ├── HR Specialist<br>
+ ├── Admin Assistant<br>
+ ├── Sales / Account Manager<br>
+ └── Digital Marketing Specialist<br>
 
 ОПИСАНИЕ НА ВСЯКА ДЛЪЖНОСТ
 ##### Управление
