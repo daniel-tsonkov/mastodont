@@ -31,6 +31,10 @@ https://hub.docker.com/_/nginx
 Docker Compose documentation (multi-container setup)
 https://docs.docker.com/compose/
 
+Basic Syntax<br>
+The Markdown elements outlined in the original design document.
+https://www.markdownguide.org/basic-syntax/
+
 Цел на проекта
 Симулиране на IT фирма с разиграване на всички позици които биха могли да се ползват.
 
