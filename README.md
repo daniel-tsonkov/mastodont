@@ -56,9 +56,9 @@ CEO
  └── Digital Marketing Specialist
 
 ОПИСАНИЕ НА ВСЯКА ДЛЪЖНОСТ
-Управление
+##### Управление
 
-CEO
+###### CEO
 Взема стратегически решения
 Отговаря за финанси, партньори и растеж
 
@@ -67,50 +67,50 @@ CEO
 Координира екипите
 Работи с клиенти
 
-HR Specialist
+###### HR Specialist
 Подбор на кадри
 Управление на процеси, адаптация, култура
 ------------------------
 ##### Разработка
 
-Backend Developers
+###### Backend Developers
 Работят по логика, API, бази данни
 Senior → архитектурни решения
 
-Frontend Developers
+###### Frontend Developers
 Изграждат UI, работят с React/Vue/Angular
 
-Full-stack Developer
+###### Full-stack Developer
 Покрива едновременно front + back
 
-DevOps Engineer
+###### DevOps Engineer
 CI/CD
 Инфраструктура
 Kubernetes / Docker
 ------------------------
 ##### QA
-QA Engineer
+###### QA Engineer
 Тества системата
 Пише автоматизирани тестове (по възможност)
 ------------------------
 ##### Support
-Technical Support L1/L2
+###### Technical Support L1/L2
 Помощ за клиенти
 Диагностика на проблеми
 ------------------------
 ##### Product & Design
-Product Owner
+###### Product Owner
 Пише user stories
 Приоритизира backlog
 
-UI/UX Designer
+###### UI/UX Designer
 Прототипи, wireframes, дизайн
 ------------------------
 ##### Sales & Marketing
-Sales Manager
+###### Sales Manager
 Намира клиенти
 Договаря сделки
 
-Marketing Specialist
+###### Marketing Specialist
 Реклама, социални мрежи
 SEO, кампании
