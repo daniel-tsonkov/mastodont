@@ -35,7 +35,7 @@ Basic Syntax<br>
 The Markdown elements outlined in the original design document.
 https://www.markdownguide.org/basic-syntax/
 
-#### Цел на проекта<br>
+### Цел на проекта<br>
 Симулиране на IT фирма с разиграване на всички позици които биха могли да се ползват.
 
 Екипа се състои от
