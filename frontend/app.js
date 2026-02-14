@@ -1,5 +1,6 @@
 const API_URL = "http://localhost:4000";
 
+// DOM Elements
 const loginView = document.getElementById("login-view");
 const appView = document.getElementById("app-view");
 const loginForm = document.getElementById("login-form");
@@ -7,24 +8,111 @@ const loginError = document.getElementById("login-error");
 const currentUsernameEl = document.getElementById("current-username");
 const logoutBtn = document.getElementById("logout-btn");
 
+// Sidebar elements
+const sidebar = document.getElementById("sidebar");
+const sidebarOverlay = document.getElementById("sidebarOverlay");
+const sidebarToggle = document.getElementById("sidebarToggle");
+const mobileMenuBtn = document.getElementById("mobileMenuBtn");
+const navItems = document.querySelectorAll(".nav-item");
+const navUsers = document.getElementById("nav-users");
+const navSettings = document.getElementById("nav-settings");
+const usersView = document.getElementById("users-view");
+const settingsView = document.getElementById("settings-view");
+const currentViewTitle = document.getElementById("currentViewTitle");
+
+// User form elements
 const userForm = document.getElementById("user-form");
 const userFormError = document.getElementById("user-form-error");
 const resetFormBtn = document.getElementById("reset-form-btn");
 const usersTableBody = document.getElementById("users-table-body");
+const formTitle = document.getElementById("form-title");
+const addUserBtn = document.getElementById("add-user-btn");
+
+// Password change elements
+const passwordChangeForm = document.getElementById("password-change-form");
+const currentPassword = document.getElementById("current-password");
+const newPassword = document.getElementById("new-password");
+const confirmPassword = document.getElementById("confirm-password");
+const changePasswordBtn = document.getElementById("change-password-btn");
+const passwordMessage = document.getElementById("password-message");
+const passwordStrength = document.getElementById("password-strength");
+const strengthBar = document.getElementById("strength-bar");
+const strengthText = document.getElementById("strength-text");
+
+// Settings elements
+const profileSettingsForm = document.getElementById("profile-settings-form");
+const profileUsername = document.getElementById("profile-username");
+const themeRadios = document.querySelectorAll('input[name="theme-preference"]');
+const itemsPerPage = document.getElementById("items-per-page");
+const sessionUsername = document.getElementById("session-username");
+const currentUserId = document.getElementById("current-user-id");
+const apiStatus = document.getElementById("api-status");
+const loginTimeSpan = document.getElementById("login-time");
 
 let currentUser = null;
+let loginTime = null;
 
+// ========== UTILITY FUNCTIONS ==========
+function showToast(message, type = "success") {
+  const toastContainer = document.querySelector(".toast-container");
+  const toastId = "toast-" + Date.now();
+
+  const toast = document.createElement("div");
+  toast.className = `toast align-items-center text-white bg-${type} border-0`;
+  toast.id = toastId;
+  toast.setAttribute("role", "alert");
+  toast.setAttribute("aria-live", "assertive");
+  toast.setAttribute("aria-atomic", "true");
+
+  toast.innerHTML = `
+    <div class="d-flex">
+      <div class="toast-body">
+        <i class="bi bi-${type === "success" ? "check-circle" : "exclamation-triangle"} me-2"></i>
+        ${message}
+      </div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+    </div>
+  `;
+
+  toastContainer.appendChild(toast);
+
+  if (typeof bootstrap !== "undefined") {
+    const bsToast = new bootstrap.Toast(toast, { delay: 3000 });
+    bsToast.show();
+
+    toast.addEventListener("hidden.bs.toast", () => {
+      toast.remove();
+    });
+  }
+}
+
+// Password strength checker
+function checkPasswordStrength(password) {
+  let strength = 0;
+  let feedback = "";
+
+  if (password.length >= 6) strength += 20;
+  if (password.length >= 8) strength += 10;
+  if (/[a-z]/.test(password)) strength += 15;
+  if (/[A-Z]/.test(password)) strength += 15;
+  if (/[0-9]/.test(password)) strength += 20;
+  if (/[^a-zA-Z0-9]/.test(password)) strength += 20;
+
+  if (strength < 30) feedback = "Weak";
+  else if (strength < 60) feedback = "Fair";
+  else if (strength < 80) feedback = "Good";
+  else feedback = "Strong";
+
+  return { strength, feedback };
+}
+
+// ========== LOGIN FUNCTIONS ==========
 function showLogin() {
   currentUser = null;
-  currentUsernameEl.textContent = "";
-
-  // Показваме login контейнера и скриваме app view
   loginView.classList.remove("d-none");
   appView.classList.add("d-none");
-
   loginError.textContent = "";
 
-  // Фокус върху username полето
   setTimeout(() => {
     document.getElementById("login-username").focus();
   }, 100);
@@ -34,7 +122,44 @@ function showApp() {
   loginView.classList.add("d-none");
   appView.classList.remove("d-none");
   loginError.textContent = "";
+  loginTime = new Date();
+
+  if (currentUser) {
+    // Update all user info displays
+    currentUsernameEl.textContent = currentUser.username;
+    if (sessionUsername) sessionUsername.textContent = currentUser.username;
+    if (currentUserId) currentUserId.textContent = currentUser.id;
+    if (profileUsername) profileUsername.value = currentUser.username;
+
+    // Update login time
+    if (loginTimeSpan) {
+      loginTimeSpan.textContent = loginTime.toLocaleTimeString();
+    }
+  }
+
+  // Check API status
+  checkApiStatus();
+
+  // Load users
   loadUsers();
+
+  // Show users view by default
+  showView("users");
+}
+
+async function checkApiStatus() {
+  try {
+    const res = await fetch(`${API_URL}/api/users`, { method: "HEAD" });
+    if (apiStatus) {
+      apiStatus.textContent = "Connected";
+      apiStatus.className = "badge bg-success";
+    }
+  } catch (err) {
+    if (apiStatus) {
+      apiStatus.textContent = "Disconnected";
+      apiStatus.className = "badge bg-danger";
+    }
+  }
 }
 
 loginForm.addEventListener("submit", async (e) => {
@@ -59,9 +184,9 @@ loginForm.addEventListener("submit", async (e) => {
 
     const data = await res.json();
     currentUser = data.user;
-    currentUsernameEl.textContent = currentUser.username;
     document.getElementById("login-password").value = "";
     showApp();
+    showToast(`Welcome back, ${currentUser.first_name}!`, "success");
   } catch (err) {
     console.error(err);
     loginError.textContent = "Cannot reach backend API";
@@ -70,29 +195,215 @@ loginForm.addEventListener("submit", async (e) => {
 
 logoutBtn.addEventListener("click", () => {
   showLogin();
+  closeSidebar();
+  showToast("Logged out successfully", "info");
 });
 
+// ========== SIDEBAR FUNCTIONS ==========
+function toggleSidebar() {
+  sidebar.classList.toggle("active");
+  sidebarOverlay.classList.toggle("active");
+}
+
+function closeSidebar() {
+  sidebar.classList.remove("active");
+  sidebarOverlay.classList.remove("active");
+}
+
+function showView(viewName) {
+  navItems.forEach((item) => {
+    item.classList.remove("active");
+    if (item.dataset.view === viewName) {
+      item.classList.add("active");
+    }
+  });
+
+  if (viewName === "users") {
+    usersView.classList.remove("d-none");
+    settingsView.classList.add("d-none");
+    currentViewTitle.textContent = "Users";
+    loadUsers();
+  } else if (viewName === "settings") {
+    usersView.classList.add("d-none");
+    settingsView.classList.remove("d-none");
+    currentViewTitle.textContent = "Settings";
+  }
+
+  closeSidebar();
+}
+
+navUsers.addEventListener("click", (e) => {
+  e.preventDefault();
+  showView("users");
+});
+
+navSettings.addEventListener("click", (e) => {
+  e.preventDefault();
+  showView("settings");
+});
+
+if (mobileMenuBtn) {
+  mobileMenuBtn.addEventListener("click", toggleSidebar);
+}
+
+if (sidebarToggle) {
+  sidebarToggle.addEventListener("click", closeSidebar);
+}
+
+if (sidebarOverlay) {
+  sidebarOverlay.addEventListener("click", closeSidebar);
+}
+
+// ========== PASSWORD CHANGE FUNCTIONALITY ==========
+if (passwordChangeForm) {
+  // Real-time password strength check
+  newPassword.addEventListener("input", () => {
+    const password = newPassword.value;
+
+    if (password.length > 0) {
+      passwordStrength.classList.remove("d-none");
+      const { strength, feedback } = checkPasswordStrength(password);
+
+      strengthBar.style.width = `${strength}%`;
+      strengthBar.className = "progress-bar";
+
+      if (strength < 30) {
+        strengthBar.classList.add("bg-danger");
+        strengthText.textContent = "Weak password";
+        strengthText.className = "text-danger";
+      } else if (strength < 60) {
+        strengthBar.classList.add("bg-warning");
+        strengthText.textContent = "Fair password";
+        strengthText.className = "text-warning";
+      } else if (strength < 80) {
+        strengthBar.classList.add("bg-info");
+        strengthText.textContent = "Good password";
+        strengthText.className = "text-info";
+      } else {
+        strengthBar.classList.add("bg-success");
+        strengthText.textContent = "Strong password";
+        strengthText.className = "text-success";
+      }
+    } else {
+      passwordStrength.classList.add("d-none");
+    }
+  });
+
+  passwordChangeForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    // Clear previous messages
+    passwordMessage.innerHTML = "";
+    passwordMessage.className = "mt-3 small";
+
+    // Get values
+    const current = currentPassword.value;
+    const newPwd = newPassword.value;
+    const confirm = confirmPassword.value;
+
+    // Validation
+    if (!current || !newPwd || !confirm) {
+      passwordMessage.innerHTML =
+        '<i class="bi bi-exclamation-triangle me-1"></i>All fields are required';
+      passwordMessage.classList.add("text-danger");
+      return;
+    }
+
+    if (newPwd !== confirm) {
+      passwordMessage.innerHTML =
+        '<i class="bi bi-exclamation-triangle me-1"></i>New passwords do not match';
+      passwordMessage.classList.add("text-danger");
+      return;
+    }
+
+    if (newPwd.length < 6) {
+      passwordMessage.innerHTML =
+        '<i class="bi bi-exclamation-triangle me-1"></i>New password must be at least 6 characters long';
+      passwordMessage.classList.add("text-danger");
+      return;
+    }
+
+    if (current === newPwd) {
+      passwordMessage.innerHTML =
+        '<i class="bi bi-exclamation-triangle me-1"></i>New password must be different from current password';
+      passwordMessage.classList.add("text-danger");
+      return;
+    }
+
+    // Disable button during request
+    changePasswordBtn.disabled = true;
+    changePasswordBtn.innerHTML =
+      '<span class="spinner-border spinner-border-sm me-2"></span>Updating...';
+
+    try {
+      const res = await fetch(
+        `${API_URL}/api/users/${currentUser.id}/change-password`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            currentPassword: current,
+            newPassword: newPwd,
+          }),
+        },
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to update password");
+      }
+
+      // Success
+      passwordMessage.innerHTML =
+        '<i class="bi bi-check-circle me-1"></i>Password updated successfully!';
+      passwordMessage.classList.add("text-success");
+
+      // Clear form
+      currentPassword.value = "";
+      newPassword.value = "";
+      confirmPassword.value = "";
+      passwordStrength.classList.add("d-none");
+
+      // Show toast
+      showToast("Password updated successfully!", "success");
+    } catch (err) {
+      console.error(err);
+      passwordMessage.innerHTML = `<i class="bi bi-exclamation-triangle me-1"></i>${err.message}`;
+      passwordMessage.classList.add("text-danger");
+      showToast(err.message, "danger");
+    } finally {
+      // Re-enable button
+      changePasswordBtn.disabled = false;
+      changePasswordBtn.innerHTML =
+        '<i class="bi bi-check-circle me-2"></i>Update Password';
+    }
+  });
+}
+
+// ========== USERS FUNCTIONS ==========
 async function loadUsers() {
-  usersTableBody.innerHTML = '<tr><td colspan="7">Loading...</td></tr>';
+  usersTableBody.innerHTML =
+    '<tr><td colspan="7" class="text-center py-4"><div class="spinner-border spinner-border-sm me-2"></div>Loading...</td></tr>';
   try {
     const res = await fetch(`${API_URL}/api/users`);
     if (!res.ok) {
-      usersTableBody.innerHTML =
-        '<tr><td colspan="7">Error loading users</td></tr>';
-      return;
+      throw new Error("Failed to load users");
     }
     const users = await res.json();
     renderUsers(users);
   } catch (err) {
     console.error(err);
     usersTableBody.innerHTML =
-      '<tr><td colspan="7">Cannot reach backend API</td></tr>';
+      '<tr><td colspan="7" class="text-center text-danger py-4">Cannot reach backend API</td></tr>';
+    showToast("Failed to load users", "danger");
   }
 }
 
 function renderUsers(users) {
   if (!users.length) {
-    usersTableBody.innerHTML = '<tr><td colspan="7">No users yet</td></tr>';
+    usersTableBody.innerHTML =
+      '<tr><td colspan="7" class="text-center py-4">No users yet</td></tr>';
     return;
   }
 
@@ -102,25 +413,36 @@ function renderUsers(users) {
 
     tr.innerHTML = `
       <td>${index + 1}</td>
-      <td>${u.first_name} ${u.last_name}</td>
+      <td><strong>${u.first_name} ${u.last_name}</strong></td>
       <td>${u.email}</td>
-      <td>${u.address || ""}</td>
-      <td>${u.phone || ""}</td>
-      <td>${u.username}</td>
-      <td class="text-end">
-        <button class="btn btn-sm btn-outline-primary me-1">Edit</button>
-        <button class="btn btn-sm btn-outline-danger">Delete</button>
+      <td>${u.address || "-"}</td>
+      <td>${u.phone || "-"}</td>
+      <td><span class="badge bg-secondary">${u.username}</span></td>
+      <td>
+        <div class="btn-group btn-group-sm">
+          <button class="btn btn-outline-primary edit-btn" title="Edit">
+            <i class="bi bi-pencil"></i>
+          </button>
+          <button class="btn btn-outline-danger delete-btn" title="Delete">
+            <i class="bi bi-trash"></i>
+          </button>
+        </div>
       </td>
     `;
 
-    const [editBtn, deleteBtn] = tr.querySelectorAll("button");
+    const editBtn = tr.querySelector(".edit-btn");
+    const deleteBtn = tr.querySelector(".delete-btn");
 
     editBtn.addEventListener("click", () => {
       fillFormForEdit(u);
     });
 
     deleteBtn.addEventListener("click", () => {
-      if (confirm("Delete this user?")) {
+      if (
+        confirm(
+          `Are you sure you want to delete ${u.first_name} ${u.last_name}?`,
+        )
+      ) {
         deleteUser(u.id);
       }
     });
@@ -139,6 +461,35 @@ function fillFormForEdit(user) {
   document.getElementById("username").value = user.username;
   document.getElementById("password").value = "";
   userFormError.textContent = "";
+  formTitle.textContent = "Edit User";
+
+  document
+    .getElementById("user-form-card")
+    .scrollIntoView({ behavior: "smooth" });
+}
+
+function clearForm() {
+  document.getElementById("user-id").value = "";
+  document.getElementById("first-name").value = "";
+  document.getElementById("last-name").value = "";
+  document.getElementById("email").value = "";
+  document.getElementById("address").value = "";
+  document.getElementById("phone").value = "";
+  document.getElementById("username").value = "";
+  document.getElementById("password").value = "";
+  userFormError.textContent = "";
+  formTitle.textContent = "Add New User";
+}
+
+resetFormBtn.addEventListener("click", clearForm);
+
+if (addUserBtn) {
+  addUserBtn.addEventListener("click", () => {
+    clearForm();
+    document
+      .getElementById("user-form-card")
+      .scrollIntoView({ behavior: "smooth" });
+  });
 }
 
 async function deleteUser(id) {
@@ -147,13 +498,13 @@ async function deleteUser(id) {
       method: "DELETE",
     });
     if (!res.ok && res.status !== 204) {
-      alert("Error deleting user");
-      return;
+      throw new Error("Error deleting user");
     }
     loadUsers();
+    showToast("User deleted successfully", "success");
   } catch (err) {
     console.error(err);
-    alert("Cannot reach backend API");
+    showToast("Cannot delete user", "danger");
   }
 }
 
@@ -184,7 +535,12 @@ userForm.addEventListener("submit", async (e) => {
     phone,
     username,
   };
+
   if (password) {
+    if (password.length < 6) {
+      userFormError.textContent = "Password must be at least 6 characters long";
+      return;
+    }
     payload.password = password;
   }
 
@@ -200,34 +556,74 @@ userForm.addEventListener("submit", async (e) => {
 
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      userFormError.textContent = data.error || "Error saving user";
-      return;
+      throw new Error(data.error || "Error saving user");
     }
 
     await res.json();
     clearForm();
     loadUsers();
+    showToast(`User ${id ? "updated" : "created"} successfully`, "success");
   } catch (err) {
     console.error(err);
-    userFormError.textContent = "Cannot reach backend API";
+    userFormError.textContent = err.message;
+    showToast(err.message, "danger");
   }
 });
 
-function clearForm() {
-  document.getElementById("user-id").value = "";
-  document.getElementById("first-name").value = "";
-  document.getElementById("last-name").value = "";
-  document.getElementById("email").value = "";
-  document.getElementById("address").value = "";
-  document.getElementById("phone").value = "";
-  document.getElementById("username").value = "";
-  document.getElementById("password").value = "";
-  userFormError.textContent = "";
-}
-
-resetFormBtn.addEventListener("click", () => {
-  clearForm();
+// ========== SETTINGS FUNCTIONS ==========
+// Theme preference radios
+themeRadios.forEach((radio) => {
+  radio.addEventListener("change", (e) => {
+    const theme = e.target.value;
+    if (theme === "light") {
+      document.documentElement.classList.remove("dark-theme");
+      localStorage.setItem("cms-theme", "light");
+      showToast("Light theme activated", "info");
+    } else if (theme === "dark") {
+      document.documentElement.classList.add("dark-theme");
+      localStorage.setItem("cms-theme", "dark");
+      showToast("Dark theme activated", "info");
+    } else if (theme === "system") {
+      localStorage.removeItem("cms-theme");
+      const prefersDark = window.matchMedia(
+        "(prefers-color-scheme: dark)",
+      ).matches;
+      if (prefersDark) {
+        document.documentElement.classList.add("dark-theme");
+      } else {
+        document.documentElement.classList.remove("dark-theme");
+      }
+      showToast("System theme activated", "info");
+    }
+  });
 });
 
-// Initial state
+// Initialize theme radios based on current theme
+function initThemeRadios() {
+  const savedTheme = localStorage.getItem("cms-theme");
+  if (savedTheme === "light") {
+    document.getElementById("theme-light").checked = true;
+  } else if (savedTheme === "dark") {
+    document.getElementById("theme-dark").checked = true;
+  } else {
+    document.getElementById("theme-system").checked = true;
+  }
+}
+
+// Items per page
+if (itemsPerPage) {
+  itemsPerPage.addEventListener("change", (e) => {
+    localStorage.setItem("items-per-page", e.target.value);
+    showToast(`Items per page set to ${e.target.value}`, "info");
+  });
+
+  // Load saved preference
+  const savedItems = localStorage.getItem("items-per-page");
+  if (savedItems) {
+    itemsPerPage.value = savedItems;
+  }
+}
+
+// ========== INITIALIZATION ==========
+initThemeRadios();
 showLogin();
