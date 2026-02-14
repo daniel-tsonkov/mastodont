@@ -17,9 +17,17 @@ let currentUser = null;
 function showLogin() {
   currentUser = null;
   currentUsernameEl.textContent = "";
+
+  // Показваме login контейнера и скриваме app view
   loginView.classList.remove("d-none");
   appView.classList.add("d-none");
+
   loginError.textContent = "";
+
+  // Фокус върху username полето
+  setTimeout(() => {
+    document.getElementById("login-username").focus();
+  }, 100);
 }
 
 function showApp() {

@@ -1,11 +1,216 @@
+/* ===== CSS ПРОМЕНЛИВИ ЗА ТЕМИТЕ ===== */
+:root {
+  --bg-body: #f8f9fa;
+  --bg-card: #ffffff;
+  --text-primary: #212529;
+  --text-secondary: #6c757d;
+  --border-color: #dee2e6;
+  --table-stripe: #f8f9fa;
+  --table-hover: #f2f2f2;
+  --btn-outline-secondary: #6c757d;
+  --btn-outline-secondary-hover: #5c636a;
+  --link-color: #0d6efd;
+  --shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  --input-bg: #ffffff;
+  --input-text: #212529;
+  --input-border: #ced4da;
+  --transition: all 0.3s ease;
+  --login-width: 350px; /* Ширина на login формата */
+}
+
+/* Тъмна тема */
+html.dark-theme {
+  --bg-body: #1a1d20;
+  --bg-card: #2c3034;
+  --text-primary: #e9ecef;
+  --text-secondary: #adb5bd;
+  --border-color: #495057;
+  --table-stripe: #343a40;
+  --table-hover: #3a4046;
+  --btn-outline-secondary: #adb5bd;
+  --btn-outline-secondary-hover: #ced4da;
+  --link-color: #6ea8fe;
+  --shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.5);
+  --input-bg: #40474f;
+  --input-text: #e9ecef;
+  --input-border: #565e67;
+}
+
+/* ===== ГЛОБАЛНИ СТИЛОВЕ ===== */
+* {
+  transition:
+    background-color 0.3s,
+    color 0.3s,
+    border-color 0.3s,
+    box-shadow 0.3s;
+}
+
 body {
   min-height: 100vh;
+  background-color: var(--bg-body);
+  color: var(--text-primary);
+  font-family:
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    "Helvetica Neue",
+    sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+/* ===== LOGIN КОНТЕЙНЕР (ЦЕНТРИРАН) ===== */
+.login-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.login-card {
+  width: 100%;
+  max-width: var(--login-width);
+  background-color: var(--bg-card);
+  border-radius: 1rem;
+  padding: 2rem;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border-color);
+}
+
+.login-form {
+  width: 100%;
+}
+
+.login-form .form-control {
+  background-color: var(--input-bg);
+  color: var(--input-text);
+  border-color: var(--input-border);
+  padding: 0.75rem 1rem;
+}
+
+.login-form .form-control:focus {
+  background-color: var(--input-bg);
+  color: var(--input-text);
+  border-color: var(--link-color);
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+.login-form .form-label {
+  color: var(--text-secondary);
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+/* ===== БУТОН ЗА ТЕМА ===== */
+.theme-toggle-btn {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 9999;
+  padding: 8px 16px;
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 30px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: var(--shadow);
+  transition: var(--transition);
+}
+
+.theme-toggle-btn:hover {
+  transform: scale(1.05);
+  background-color: var(--table-hover);
+}
+
+/* ===== APP VIEW СТИЛОВЕ ===== */
+#app-view .container {
+  padding-top: 2rem;
+  padding-bottom: 2rem;
 }
 
 .card {
   border-radius: 0.75rem;
+  background-color: var(--bg-card);
+  border-color: var(--border-color);
+}
+
+.card-body {
+  color: var(--text-primary);
+}
+
+.table {
+  color: var(--text-primary);
 }
 
 .table thead th {
   white-space: nowrap;
+  border-bottom-color: var(--border-color);
+}
+
+.table-striped > tbody > tr:nth-of-type(odd) > * {
+  background-color: var(--table-stripe);
+  color: var(--text-primary);
+}
+
+.table-striped > tbody > tr:hover > * {
+  background-color: var(--table-hover);
+}
+
+.table td,
+.table th {
+  border-top-color: var(--border-color);
+}
+
+.form-label {
+  color: var(--text-secondary);
+}
+
+.form-control {
+  background-color: var(--input-bg);
+  color: var(--input-text);
+  border-color: var(--input-border);
+}
+
+.btn-outline-secondary {
+  color: var(--btn-outline-secondary);
+  border-color: var(--border-color);
+}
+
+.btn-outline-secondary:hover {
+  background-color: var(--btn-outline-secondary-hover);
+  color: var(--bg-body);
+  border-color: var(--btn-outline-secondary-hover);
+}
+
+/* ===== АДАПТИВНОСТ ===== */
+@media (max-width: 768px) {
+  .login-card {
+    max-width: 90%;
+    padding: 1.5rem;
+  }
+
+  .theme-toggle-btn {
+    top: 10px;
+    right: 10px;
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+
+  #app-view .container {
+    padding-left: 15px;
+    padding-right: 15px;
+  }
+}
+
+/* Bootstrap класове за тъмна тема */
+.dark-theme .bg-light {
+  background-color: var(--bg-body) !important;
+}
+
+.dark-theme .text-dark {
+  color: var(--text-primary) !important;
 }
