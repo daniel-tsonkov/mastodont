@@ -1,5 +1,12 @@
 # mastodont
 # Command for run:
+# Спиране и премахване на старите контейнери
+docker-compose down -v
+
+# Изтриване на старата база данни (ако искате fresh start)
+rm -f backend/cms.db
+
+# Стартиране наново
 docker-compose up --build
 
 Then open http://localhost:3000 in a browser.

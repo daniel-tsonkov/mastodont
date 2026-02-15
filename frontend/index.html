@@ -67,7 +67,7 @@
           <i class="bi bi-person-circle user-avatar"></i>
           <div class="user-details">
             <span class="user-name" id="current-username"></span>
-            <span class="user-role">Administrator</span>
+            <span class="user-role" id="current-user-role">Administrator</span>
           </div>
         </div>
 
@@ -125,9 +125,8 @@
                   <th>#</th>
                   <th>Name</th>
                   <th>Email</th>
-                  <th>Address</th>
-                  <th>Phone</th>
                   <th>Username</th>
+                  <th>Role</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -164,6 +163,21 @@
                   <label class="form-label" for="username">Username</label>
                   <input class="form-control" id="username" required />
                 </div>
+                <div class="col-md-6">
+                  <label class="form-label" for="password">Password</label>
+                  <input
+                    type="password"
+                    class="form-control"
+                    id="password"
+                    placeholder="Leave blank to keep"
+                  />
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label" for="role-select">Role</label>
+                  <select class="form-select" id="role-select" required>
+                    <option value="">Select role...</option>
+                  </select>
+                </div>
                 <div class="col-md-12">
                   <label class="form-label" for="address">Address</label>
                   <input class="form-control" id="address" />
@@ -171,12 +185,6 @@
                 <div class="col-md-6">
                   <label class="form-label" for="phone">Phone</label>
                   <input class="form-control" id="phone" />
-                </div>
-                <div class="col-md-6">
-                  <label class="form-label" for="password"
-                    >Password (leave blank to keep)</label
-                  >
-                  <input type="password" class="form-control" id="password" />
                 </div>
                 <div class="col-12 d-flex gap-2">
                   <button type="submit" class="btn btn-success">
@@ -280,12 +288,99 @@
                       <i class="bi bi-check-circle me-2"></i>Update Password
                     </button>
 
-                    <!-- Password change message -->
                     <div id="password-message" class="mt-3 small"></div>
                   </form>
                 </div>
               </div>
 
+              <!-- ROLES MANAGEMENT CARD - НОВ МОДУЛ -->
+              <div class="card mb-4">
+                <div class="card-header">
+                  <h5 class="card-title mb-0">
+                    <i class="bi bi-shield me-2"></i>
+                    Role Management
+                  </h5>
+                </div>
+                <div class="card-body">
+                  <!-- Existing roles dropdown -->
+                  <div class="mb-4">
+                    <label class="form-label fw-semibold"
+                      >Manage Existing Roles</label
+                    >
+                    <div class="input-group">
+                      <select class="form-select" id="role-select-manage">
+                        <option value="">Select a role...</option>
+                      </select>
+                      <button
+                        class="btn btn-outline-danger"
+                        type="button"
+                        id="delete-role-btn"
+                        disabled
+                      >
+                        <i class="bi bi-trash me-2"></i>Delete
+                      </button>
+                    </div>
+                    <div id="role-delete-message" class="small mt-2"></div>
+                  </div>
+
+                  <!-- Add new role -->
+                  <div class="mb-3">
+                    <label class="form-label fw-semibold">Add New Role</label>
+                    <div class="input-group mb-2">
+                      <input
+                        type="text"
+                        class="form-control"
+                        id="new-role-name"
+                        placeholder="Enter role name (e.g. 'manager')"
+                      />
+                      <button
+                        class="btn btn-success"
+                        type="button"
+                        id="add-role-btn"
+                      >
+                        <i class="bi bi-plus-circle me-2"></i>Add
+                      </button>
+                    </div>
+                    <input
+                      type="text"
+                      class="form-control mt-2"
+                      id="new-role-description"
+                      placeholder="Role description (optional)"
+                    />
+                    <div id="role-add-message" class="small mt-2"></div>
+                  </div>
+
+                  <!-- Roles list -->
+                  <div class="mt-4">
+                    <label class="form-label fw-semibold">Current Roles</label>
+                    <div class="table-responsive">
+                      <table class="table table-sm table-hover">
+                        <thead>
+                          <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Description</th>
+                            <th>Created</th>
+                          </tr>
+                        </thead>
+                        <tbody id="roles-table-body">
+                          <tr>
+                            <td colspan="4" class="text-center py-3">
+                              <span
+                                class="spinner-border spinner-border-sm me-2"
+                              ></span
+                              >Loading roles...
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-md-6">
               <!-- DISPLAY SETTINGS CARD -->
               <div class="card mb-4">
                 <div class="card-header">
@@ -304,7 +399,6 @@
                         name="theme-preference"
                         id="theme-light"
                         value="light"
-                        checked
                       />
                       <label class="form-check-label" for="theme-light">
                         <i class="bi bi-sun me-1"></i>Light
@@ -329,6 +423,7 @@
                         name="theme-preference"
                         id="theme-system"
                         value="system"
+                        checked
                       />
                       <label class="form-check-label" for="theme-system">
                         <i class="bi bi-laptop me-1"></i>System
@@ -346,9 +441,7 @@
                   </div>
                 </div>
               </div>
-            </div>
 
-            <div class="col-md-6">
               <!-- SYSTEM INFORMATION CARD -->
               <div class="card mb-4">
                 <div class="card-header">
@@ -363,7 +456,7 @@
                       class="list-group-item d-flex justify-content-between align-items-center bg-transparent"
                     >
                       <span><i class="bi bi-tag me-2"></i>Version</span>
-                      <span class="badge bg-primary">1.0.0</span>
+                      <span class="badge bg-primary">1.1.0</span>
                     </li>
                     <li
                       class="list-group-item d-flex justify-content-between align-items-center bg-transparent"
@@ -406,6 +499,10 @@
                   <p class="mb-2">
                     <i class="bi bi-person-circle me-2"></i>
                     Logged in as: <strong id="session-username"></strong>
+                  </p>
+                  <p class="mb-2">
+                    <i class="bi bi-shield me-2"></i>
+                    Role: <strong id="session-role"></strong>
                   </p>
                   <p class="mb-0">
                     <i class="bi bi-calendar me-2"></i>

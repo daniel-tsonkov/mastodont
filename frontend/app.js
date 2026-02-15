@@ -6,6 +6,7 @@ const appView = document.getElementById("app-view");
 const loginForm = document.getElementById("login-form");
 const loginError = document.getElementById("login-error");
 const currentUsernameEl = document.getElementById("current-username");
+const currentUserRoleEl = document.getElementById("current-user-role");
 const logoutBtn = document.getElementById("logout-btn");
 
 // Sidebar elements
@@ -27,6 +28,7 @@ const resetFormBtn = document.getElementById("reset-form-btn");
 const usersTableBody = document.getElementById("users-table-body");
 const formTitle = document.getElementById("form-title");
 const addUserBtn = document.getElementById("add-user-btn");
+const roleSelect = document.getElementById("role-select");
 
 // Password change elements
 const passwordChangeForm = document.getElementById("password-change-form");
@@ -39,18 +41,28 @@ const passwordStrength = document.getElementById("password-strength");
 const strengthBar = document.getElementById("strength-bar");
 const strengthText = document.getElementById("strength-text");
 
+// Roles management elements
+const roleSelectManage = document.getElementById("role-select-manage");
+const deleteRoleBtn = document.getElementById("delete-role-btn");
+const roleDeleteMessage = document.getElementById("role-delete-message");
+const newRoleName = document.getElementById("new-role-name");
+const newRoleDescription = document.getElementById("new-role-description");
+const addRoleBtn = document.getElementById("add-role-btn");
+const roleAddMessage = document.getElementById("role-add-message");
+const rolesTableBody = document.getElementById("roles-table-body");
+
 // Settings elements
-const profileSettingsForm = document.getElementById("profile-settings-form");
-const profileUsername = document.getElementById("profile-username");
 const themeRadios = document.querySelectorAll('input[name="theme-preference"]');
 const itemsPerPage = document.getElementById("items-per-page");
 const sessionUsername = document.getElementById("session-username");
+const sessionRole = document.getElementById("session-role");
 const currentUserId = document.getElementById("current-user-id");
 const apiStatus = document.getElementById("api-status");
 const loginTimeSpan = document.getElementById("login-time");
 
 let currentUser = null;
 let loginTime = null;
+let roles = []; // Cache for roles
 
 // ========== UTILITY FUNCTIONS ==========
 function showToast(message, type = "success") {
@@ -106,6 +118,72 @@ function checkPasswordStrength(password) {
   return { strength, feedback };
 }
 
+// ========== ROLES API FUNCTIONS ==========
+async function loadRoles() {
+  try {
+    const res = await fetch(`${API_URL}/api/roles`);
+    if (!res.ok) throw new Error("Failed to load roles");
+    roles = await res.json();
+    return roles;
+  } catch (err) {
+    console.error("Error loading roles:", err);
+    showToast("Failed to load roles", "danger");
+    return [];
+  }
+}
+
+async function populateRoleDropdowns() {
+  const roles = await loadRoles();
+
+  // Populate user form role select
+  if (roleSelect) {
+    roleSelect.innerHTML = '<option value="">Select role...</option>';
+    roles.forEach((role) => {
+      const option = document.createElement("option");
+      option.value = role.id;
+      option.textContent = role.name;
+      roleSelect.appendChild(option);
+    });
+  }
+
+  // Populate role management select
+  if (roleSelectManage) {
+    roleSelectManage.innerHTML = '<option value="">Select a role...</option>';
+    roles.forEach((role) => {
+      const option = document.createElement("option");
+      option.value = role.id;
+      option.textContent = `${role.name}${role.description ? " - " + role.description : ""}`;
+      roleSelectManage.appendChild(option);
+    });
+  }
+
+  // Populate roles table
+  if (rolesTableBody) {
+    if (roles.length === 0) {
+      rolesTableBody.innerHTML =
+        '<tr><td colspan="4" class="text-center py-3">No roles found</td></tr>';
+    } else {
+      rolesTableBody.innerHTML = "";
+      roles.forEach((role) => {
+        const tr = document.createElement("tr");
+        const createdDate = role.created_at
+          ? new Date(role.created_at).toLocaleDateString()
+          : "N/A";
+
+        tr.innerHTML = `
+          <td>${role.id}</td>
+          <td><span class="badge bg-info">${role.name}</span></td>
+          <td>${role.description || "-"}</td>
+          <td>${createdDate}</td>
+        `;
+        rolesTableBody.appendChild(tr);
+      });
+    }
+  }
+
+  return roles;
+}
+
 // ========== LOGIN FUNCTIONS ==========
 function showLogin() {
   currentUser = null;
@@ -118,7 +196,7 @@ function showLogin() {
   }, 100);
 }
 
-function showApp() {
+async function showApp() {
   loginView.classList.add("d-none");
   appView.classList.remove("d-none");
   loginError.textContent = "";
@@ -128,14 +206,18 @@ function showApp() {
     // Update all user info displays
     currentUsernameEl.textContent = currentUser.username;
     if (sessionUsername) sessionUsername.textContent = currentUser.username;
+    if (sessionRole)
+      sessionRole.textContent = currentUser.role_name || "Administrator";
     if (currentUserId) currentUserId.textContent = currentUser.id;
-    if (profileUsername) profileUsername.value = currentUser.username;
 
     // Update login time
     if (loginTimeSpan) {
       loginTimeSpan.textContent = loginTime.toLocaleTimeString();
     }
   }
+
+  // Load roles and populate dropdowns
+  await populateRoleDropdowns();
 
   // Check API status
   checkApiStatus();
@@ -227,6 +309,8 @@ function showView(viewName) {
     usersView.classList.add("d-none");
     settingsView.classList.remove("d-none");
     currentViewTitle.textContent = "Settings";
+    // Refresh roles when showing settings
+    populateRoleDropdowns();
   }
 
   closeSidebar();
@@ -254,9 +338,8 @@ if (sidebarOverlay) {
   sidebarOverlay.addEventListener("click", closeSidebar);
 }
 
-// ========== PASSWORD CHANGE FUNCTIONALITY ==========
+// ========== PASSWORD CHANGE ==========
 if (passwordChangeForm) {
-  // Real-time password strength check
   newPassword.addEventListener("input", () => {
     const password = newPassword.value;
 
@@ -292,16 +375,13 @@ if (passwordChangeForm) {
   passwordChangeForm.addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    // Clear previous messages
     passwordMessage.innerHTML = "";
     passwordMessage.className = "mt-3 small";
 
-    // Get values
     const current = currentPassword.value;
     const newPwd = newPassword.value;
     const confirm = confirmPassword.value;
 
-    // Validation
     if (!current || !newPwd || !confirm) {
       passwordMessage.innerHTML =
         '<i class="bi bi-exclamation-triangle me-1"></i>All fields are required';
@@ -330,7 +410,6 @@ if (passwordChangeForm) {
       return;
     }
 
-    // Disable button during request
     changePasswordBtn.disabled = true;
     changePasswordBtn.innerHTML =
       '<span class="spinner-border spinner-border-sm me-2"></span>Updating...';
@@ -354,18 +433,15 @@ if (passwordChangeForm) {
         throw new Error(data.error || "Failed to update password");
       }
 
-      // Success
       passwordMessage.innerHTML =
         '<i class="bi bi-check-circle me-1"></i>Password updated successfully!';
       passwordMessage.classList.add("text-success");
 
-      // Clear form
       currentPassword.value = "";
       newPassword.value = "";
       confirmPassword.value = "";
       passwordStrength.classList.add("d-none");
 
-      // Show toast
       showToast("Password updated successfully!", "success");
     } catch (err) {
       console.error(err);
@@ -373,7 +449,6 @@ if (passwordChangeForm) {
       passwordMessage.classList.add("text-danger");
       showToast(err.message, "danger");
     } finally {
-      // Re-enable button
       changePasswordBtn.disabled = false;
       changePasswordBtn.innerHTML =
         '<i class="bi bi-check-circle me-2"></i>Update Password';
@@ -381,10 +456,134 @@ if (passwordChangeForm) {
   });
 }
 
+// ========== ROLES MANAGEMENT ==========
+// Handle role selection in management dropdown
+if (roleSelectManage) {
+  roleSelectManage.addEventListener("change", (e) => {
+    const selectedRoleId = e.target.value;
+
+    if (selectedRoleId) {
+      deleteRoleBtn.disabled = false;
+
+      // Check if it's the admin role (ID 1)
+      if (selectedRoleId == 1) {
+        roleDeleteMessage.innerHTML =
+          '<span class="text-warning"><i class="bi bi-exclamation-triangle me-1"></i>Admin role cannot be deleted</span>';
+        deleteRoleBtn.disabled = true;
+      } else {
+        // Check if role is assigned to any users
+        const assignedUsers = []; // This should be checked via API
+        roleDeleteMessage.innerHTML = "";
+        deleteRoleBtn.disabled = false;
+      }
+    } else {
+      deleteRoleBtn.disabled = true;
+      roleDeleteMessage.innerHTML = "";
+    }
+  });
+}
+
+// Delete role
+if (deleteRoleBtn) {
+  deleteRoleBtn.addEventListener("click", async () => {
+    const roleId = roleSelectManage.value;
+    const roleName =
+      roleSelectManage.options[roleSelectManage.selectedIndex]?.text.split(
+        " - ",
+      )[0];
+
+    if (!roleId) return;
+
+    if (!confirm(`Are you sure you want to delete the role "${roleName}"?`)) {
+      return;
+    }
+
+    deleteRoleBtn.disabled = true;
+    deleteRoleBtn.innerHTML =
+      '<span class="spinner-border spinner-border-sm me-2"></span>Deleting...';
+
+    try {
+      const res = await fetch(`${API_URL}/api/roles/${roleId}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to delete role");
+      }
+
+      // Refresh roles
+      await populateRoleDropdowns();
+
+      // Reset selection
+      roleSelectManage.value = "";
+      deleteRoleBtn.disabled = true;
+      roleDeleteMessage.innerHTML = "";
+
+      showToast(`Role "${roleName}" deleted successfully`, "success");
+    } catch (err) {
+      console.error(err);
+      roleDeleteMessage.innerHTML = `<span class="text-danger"><i class="bi bi-exclamation-triangle me-1"></i>${err.message}</span>`;
+      showToast(err.message, "danger");
+    } finally {
+      deleteRoleBtn.innerHTML = '<i class="bi bi-trash me-2"></i>Delete';
+    }
+  });
+}
+
+// Add new role
+if (addRoleBtn) {
+  addRoleBtn.addEventListener("click", async () => {
+    const name = newRoleName.value.trim();
+    const description = newRoleDescription.value.trim();
+
+    if (!name) {
+      roleAddMessage.innerHTML =
+        '<span class="text-danger"><i class="bi bi-exclamation-triangle me-1"></i>Role name is required</span>';
+      return;
+    }
+
+    addRoleBtn.disabled = true;
+    addRoleBtn.innerHTML =
+      '<span class="spinner-border spinner-border-sm me-2"></span>Adding...';
+
+    try {
+      const res = await fetch(`${API_URL}/api/roles`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, description }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to create role");
+      }
+
+      // Clear inputs
+      newRoleName.value = "";
+      newRoleDescription.value = "";
+      roleAddMessage.innerHTML = `<span class="text-success"><i class="bi bi-check-circle me-1"></i>Role "${name}" created successfully</span>`;
+
+      // Refresh roles
+      await populateRoleDropdowns();
+
+      showToast(`Role "${name}" created successfully`, "success");
+    } catch (err) {
+      console.error(err);
+      roleAddMessage.innerHTML = `<span class="text-danger"><i class="bi bi-exclamation-triangle me-1"></i>${err.message}</span>`;
+      showToast(err.message, "danger");
+    } finally {
+      addRoleBtn.disabled = false;
+      addRoleBtn.innerHTML = '<i class="bi bi-plus-circle me-2"></i>Add';
+    }
+  });
+}
+
 // ========== USERS FUNCTIONS ==========
 async function loadUsers() {
   usersTableBody.innerHTML =
-    '<tr><td colspan="7" class="text-center py-4"><div class="spinner-border spinner-border-sm me-2"></div>Loading...</td></tr>';
+    '<tr><td colspan="6" class="text-center py-4"><div class="spinner-border spinner-border-sm me-2"></div>Loading...</td></tr>';
   try {
     const res = await fetch(`${API_URL}/api/users`);
     if (!res.ok) {
@@ -395,7 +594,7 @@ async function loadUsers() {
   } catch (err) {
     console.error(err);
     usersTableBody.innerHTML =
-      '<tr><td colspan="7" class="text-center text-danger py-4">Cannot reach backend API</td></tr>';
+      '<tr><td colspan="6" class="text-center text-danger py-4">Cannot reach backend API</td></tr>';
     showToast("Failed to load users", "danger");
   }
 }
@@ -403,7 +602,7 @@ async function loadUsers() {
 function renderUsers(users) {
   if (!users.length) {
     usersTableBody.innerHTML =
-      '<tr><td colspan="7" class="text-center py-4">No users yet</td></tr>';
+      '<tr><td colspan="6" class="text-center py-4">No users yet</td></tr>';
     return;
   }
 
@@ -415,9 +614,8 @@ function renderUsers(users) {
       <td>${index + 1}</td>
       <td><strong>${u.first_name} ${u.last_name}</strong></td>
       <td>${u.email}</td>
-      <td>${u.address || "-"}</td>
-      <td>${u.phone || "-"}</td>
-      <td><span class="badge bg-secondary">${u.username}</span></td>
+      <td>${u.username}</td>
+      <td><span class="badge ${u.role_name === "admin" ? "bg-danger" : "bg-info"}">${u.role_name || "Unknown"}</span></td>
       <td>
         <div class="btn-group btn-group-sm">
           <button class="btn btn-outline-primary edit-btn" title="Edit">
@@ -460,6 +658,12 @@ function fillFormForEdit(user) {
   document.getElementById("phone").value = user.phone || "";
   document.getElementById("username").value = user.username;
   document.getElementById("password").value = "";
+
+  // Set role select
+  if (roleSelect && user.role_id) {
+    roleSelect.value = user.role_id;
+  }
+
   userFormError.textContent = "";
   formTitle.textContent = "Edit User";
 
@@ -477,6 +681,7 @@ function clearForm() {
   document.getElementById("phone").value = "";
   document.getElementById("username").value = "";
   document.getElementById("password").value = "";
+  if (roleSelect) roleSelect.value = "";
   userFormError.textContent = "";
   formTitle.textContent = "Add New User";
 }
@@ -520,10 +725,16 @@ userForm.addEventListener("submit", async (e) => {
   const phone = document.getElementById("phone").value.trim();
   const username = document.getElementById("username").value.trim();
   const password = document.getElementById("password").value;
+  const role_id = roleSelect ? roleSelect.value : null;
 
   if (!first_name || !last_name || !email || !username) {
     userFormError.textContent =
       "First name, last name, email and username are required";
+    return;
+  }
+
+  if (!role_id && !id) {
+    userFormError.textContent = "Please select a role";
     return;
   }
 
@@ -534,6 +745,7 @@ userForm.addEventListener("submit", async (e) => {
     address,
     phone,
     username,
+    role_id: role_id || 4, // Default to viewer
   };
 
   if (password) {
@@ -617,7 +829,6 @@ if (itemsPerPage) {
     showToast(`Items per page set to ${e.target.value}`, "info");
   });
 
-  // Load saved preference
   const savedItems = localStorage.getItem("items-per-page");
   if (savedItems) {
     itemsPerPage.value = savedItems;
